@@ -1,0 +1,126 @@
+#include <OLED_I2C.h>
+
+unsigned long time1=0, time2=0;
+int position=0;
+byte lastButtonState = LOW;
+byte buttonState = LOW;
+int buttonPin = 12;
+int ledPin = 3;
+bool gamenotchosen = true;
+OLED  myOLED(SDA, SCL, 8);
+
+int resolution[2] = { 128, 64 }, ball[2] = { 20, (resolution[1] / 2) };
+const int PIXEL_SIZE = 10, WALL_WIDTH = 2, PADDLE_WIDTH = 4, BALL_SIZE = 5, SPEED = 2;
+int playerScore = 0, aiScore = 0, playerPos = 0, aiPos = 0;
+char ballDirectionHori = 'R', ballDirectionVerti = 'S';
+boolean inProgress = true;
+
+const int rocketLenght = 10;  // Rocket body Length 
+const int rocketHight = 5;    // Rocket body Hight
+const int maxX = 32;         // Maximum X-value
+const int maxY = 128;          // Maximum Y-value
+int y;                        // Rocket Y-coordinate
+int x = 8;                    // Rocket X-coordinate
+int pixX;                     // Pixel coordinate X
+int pixY;                     // Pixel coordinate Y
+int flameR = 8;               // Flame radius  
+int potValue;
+int intensFire = 10;          // Fire pixel concentration 
+int astR = 5;                 // Asteroid radius 
+int minastR = 2;
+int maxastR = 10;
+const int astPixConcent = 20; // Pixels concentration inside the asteroid
+int rOut = 5;
+int astX ;
+int astY ;           
+int astSpd = 2;      //  Asteroid speed
+int score = 0;       //  Game score
+int record = 0;      //  Game record 
+int pixExpX;         //  Explosion coordinate X
+int pixExpY;         //  Explsion coordinate Y
+int explosionIntetsivity = 10;
+int explosionR = 15;  // Radius of rocket explosion
+bool gameMode = false;
+int potPin = A0;      // Potenciometer pin
+
+extern uint8_t SmallFont[];
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT);
+  Serial.begin(9600);
+  myOLED.begin();
+  myOLED.setFont(SmallFont);
+  analogWrite(A1,1023);
+  analogWrite(A2,0);
+  potValue = analogRead(potPin);
+  byte lastButtonState = digitalRead(buttonPin);
+  //drawMenu();// put your setup code here, to run once:
+
+}
+
+void TimePrint(unsigned long time)
+{
+ time=time/250;
+ if (time/60%60<10) { Serial.print ("0"); }
+ Serial.print ((time/60)%60);
+ Serial.print (":");
+ if (time%60<10) { Serial.print ("0"); }
+ Serial.println (time%60);
+}
+
+void pong(){
+  myOLED.clrScr();
+  playerScore = 0; aiScore = 0; playerPos = 0; aiPos = 0;
+  inProgress = true;
+  time1=millis();
+  pong_game();
+  TimePrint(millis()-time1);
+  playerScore = 0; aiScore = 0; playerPos = 0; aiPos = 0;
+  inProgress = true;
+  gamenotchosen=true;
+
+}
+void scroller(){
+  myOLED.clrScr();
+  gameMode=true;
+  time1=millis();
+  scroller_game();
+  time2=millis();
+  TimePrint(time2-time1);
+  gamenotchosen=true;
+}
+void drawMenu(){
+  myOLED.clrScr();
+  myOLED.print("<--CHOOSE A GAME-->", 5,0);
+  myOLED.print("Pong",10,10);
+  myOLED.print("Scroller",10,20);
+}
+void loop() {
+  while (gamenotchosen)
+  {
+    drawMenu();
+  position = analogRead(A0);
+  if (position<=512) {
+    myOLED.drawCircle(5, 15, 2);
+  } else {
+    myOLED.drawCircle(5, 25, 2);
+  }
+  buttonState=digitalRead(buttonPin);
+  if (buttonState==lastButtonState) {
+    lastButtonState=buttonState;
+    if (position<=512) {
+
+      gamenotchosen=false;
+      pong();
+      } else {
+      
+      gamenotchosen=false;
+      scroller();
+    }
+  }
+  // put your main code here, to run repeatedly:
+  myOLED.update();
+  }
+  delay(1000);
+
+}
